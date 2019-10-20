@@ -4,3 +4,4 @@
 /client
 cmd/server/server
 cmd/client/client
+.dir-locals.el

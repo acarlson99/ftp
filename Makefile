@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -I include/
 
 SERVER_DIR = cmd/server/
 SERVER_OBJ = $(addprefix $(SERVER_DIR), server.o)

@@ -1,14 +1,9 @@
+#include <errno.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <unistd.h>
-
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-
-#include <signal.h>
-
-#include <errno.h>
 
 int g_sockfd;
 
@@ -26,7 +21,12 @@ void handle_sigint(int sig) {
 
 int config_socket(struct sockaddr_in *sock, int port) {
 	g_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (g_sockfd < 0) {
+		perror("Unable to create socket");
+		return (1);
+	}
 
+	bzero(sock, sizeof(*sock));
 	sock->sin_family = AF_INET;
 	sock->sin_addr.s_addr = htonl(INADDR_ANY);
 	sock->sin_port = htons(port);
@@ -49,8 +49,11 @@ int config_socket(struct sockaddr_in *sock, int port) {
 void handle_conn(int connfd, int ii) {
 	dprintf(connfd, "Connection %d\n", ii);
 	char buf[256] = {0};
-	while ((read(connfd, buf, 256)) > 0) {
-		printf("%s", buf);
+	ssize_t size;
+	char cmd = 0;
+	while ((size = read(connfd, &cmd, sizeof(cmd))) > 0) {
+		printf("%d\n", cmd);
+		bzero(buf, sizeof(buf));
 	}
 	close(connfd);
 }
@@ -60,6 +63,7 @@ int main(int argc, char **argv) {
 		printf("usage: %s port\n", argv[0]);
 		return (1);
 	}
+
 	int port = atoi(argv[1]);
 	if (port < 1) {
 		puts("Invalid port");
@@ -70,20 +74,21 @@ int main(int argc, char **argv) {
 	signal(SIGTERM, handle_sigint);
 
 	int bad = config_socket(&servaddr, port);
-	if (bad)
+	if (bad) {
+		close(g_sockfd);
 		return (1);
+	}
 
 	printf("Listening on port %d\n", port);
 	socklen_t len = sizeof(cli);
 	int connfd;
 	int ii = 0;
-	while ((connfd = accept(g_sockfd, (struct sockaddr *)&servaddr, &len))) {
+	while ((connfd = accept(g_sockfd, (struct sockaddr *)&cli, &len))) {
 		if (connfd < 0) {
 			perror("Unable to accept connection");
-			continue ;
+			continue;
 		}
 		if (fork() == 0) {
-			sleep(1);
 			handle_conn(connfd, ii);
 			close(g_sockfd);
 			exit(0);
