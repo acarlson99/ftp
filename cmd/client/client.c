@@ -10,7 +10,7 @@ int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
 		perror("Unable to create socket");
-		return (1);
+		return (-1);
 	}
 	bzero(sock, sizeof(*sock));
 
@@ -20,9 +20,9 @@ int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 
 	if (connect(sockfd, (struct sockaddr *)sock, sizeof(*sock)) != 0) {
 		perror("Unable to connect to socket");
-		return (1);
+		return (-1);
 	}
-	return (0);
+	return (sockfd);
 }
 
 void handle_conn(int sockfd) {
@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
 	int port = atoi(argv[2]);
 	if (port < 1) {
 		puts("Invalid port");
+		return (1);
 	}
 
 	struct sockaddr_in servaddr;
