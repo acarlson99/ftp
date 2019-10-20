@@ -10,7 +10,7 @@
 
 #include <errno.h>
 
-int sockfd;
+int g_sockfd;
 
 void handle_child(int sig) {
 	(void)sig;
@@ -19,28 +19,27 @@ void handle_child(int sig) {
 
 void handle_sigint(int sig) {
 	(void)sig;
-	printf("Cleaning up\n");
-	close(sockfd);
+	puts("Cleaning up");
+	close(g_sockfd);
 	exit(0);
 }
 
 int config_socket(struct sockaddr_in *sock, int port) {
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	g_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	sock->sin_family = AF_INET;
 	sock->sin_addr.s_addr = htonl(INADDR_ANY);
 	sock->sin_port = htons(port);
-	/* int optval = 1; */
-	/* setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)); */
-	/* printf("%d\n", optval); */
+	int optval = 1;
+	setsockopt(g_sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 
-	if ((bind(sockfd, (struct sockaddr *)&sock, sizeof(sock))) != 0) {
+	if ((bind(g_sockfd, (struct sockaddr *)sock, sizeof(*sock))) != 0) {
 		perror("Unable to bind socket");
 		return (1);
 	}
 	printf("Bound socket\n");
 
-	if ((listen(sockfd, 10)) != 0) {
+	if ((listen(g_sockfd, 10)) != 0) {
 		perror("Unable to listen");
 		return (1);
 	}
@@ -49,6 +48,10 @@ int config_socket(struct sockaddr_in *sock, int port) {
 
 void handle_conn(int connfd, int ii) {
 	dprintf(connfd, "Connection %d\n", ii);
+	char buf[256] = {0};
+	while ((read(connfd, buf, 256)) > 0) {
+		printf("%s", buf);
+	}
 	close(connfd);
 }
 
@@ -58,9 +61,13 @@ int main(int argc, char **argv) {
 		return (1);
 	}
 	int port = atoi(argv[1]);
+	if (port < 1) {
+		puts("Invalid port");
+	}
 	struct sockaddr_in servaddr, cli;
 
 	signal(SIGINT, handle_sigint);
+	signal(SIGTERM, handle_sigint);
 
 	int bad = config_socket(&servaddr, port);
 	if (bad)
@@ -70,7 +77,7 @@ int main(int argc, char **argv) {
 	socklen_t len = sizeof(cli);
 	int connfd;
 	int ii = 0;
-	while ((connfd = accept(sockfd, (struct sockaddr *)&servaddr, &len))) {
+	while ((connfd = accept(g_sockfd, (struct sockaddr *)&servaddr, &len))) {
 		if (connfd < 0) {
 			perror("Unable to accept connection");
 			continue ;
@@ -78,13 +85,11 @@ int main(int argc, char **argv) {
 		if (fork() == 0) {
 			sleep(1);
 			handle_conn(connfd, ii);
-			close(sockfd);
+			close(g_sockfd);
 			exit(0);
 		}
-		/* wait(NULL); */
 		signal(SIGCHLD, handle_child);
 		close(connfd);
 		ii++;
 	}
-	printf("Server\n");
 }
