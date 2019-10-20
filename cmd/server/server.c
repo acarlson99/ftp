@@ -12,6 +12,11 @@
 
 int sockfd;
 
+void handle_child(int sig) {
+	(void)sig;
+	wait(NULL);
+}
+
 void handle_sigint(int sig) {
 	(void)sig;
 	printf("Cleaning up\n");
@@ -19,10 +24,27 @@ void handle_sigint(int sig) {
 	exit(0);
 }
 
-void config_socket(struct sockaddr_in *socket, int port) {
-	socket->sin_family = AF_INET;
-	socket->sin_addr.s_addr = htonl(INADDR_ANY);
-	socket->sin_port = htons(port);
+int config_socket(struct sockaddr_in *sock, int port) {
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+	sock->sin_family = AF_INET;
+	sock->sin_addr.s_addr = htonl(INADDR_ANY);
+	sock->sin_port = htons(port);
+	/* int optval = 1; */
+	/* setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)); */
+	/* printf("%d\n", optval); */
+
+	if ((bind(sockfd, (struct sockaddr *)&sock, sizeof(sock))) != 0) {
+		perror("Unable to bind socket");
+		return (1);
+	}
+	printf("Bound socket\n");
+
+	if ((listen(sockfd, 10)) != 0) {
+		perror("Unable to listen");
+		return (1);
+	}
+	return (0);
 }
 
 void handle_conn(int connfd, int ii) {
@@ -37,21 +59,13 @@ int main(int argc, char **argv) {
 	}
 	int port = atoi(argv[1]);
 	struct sockaddr_in servaddr, cli;
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	signal(SIGINT, handle_sigint);
 
-	config_socket(&servaddr, port);
-
-	if ((bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr))) != 0) {
-		perror("Unable to bind socket");
+	int bad = config_socket(&servaddr, port);
+	if (bad)
 		return (1);
-	}
-	printf("Bound socket\n");
 
-	if ((listen(sockfd, 10)) != 0) {
-		perror("Unable to listen");
-	}
 	printf("Listening on port %d\n", port);
 	socklen_t len = sizeof(cli);
 	int connfd;
@@ -67,6 +81,8 @@ int main(int argc, char **argv) {
 			close(sockfd);
 			exit(0);
 		}
+		/* wait(NULL); */
+		signal(SIGCHLD, handle_child);
 		close(connfd);
 		ii++;
 	}
