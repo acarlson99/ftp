@@ -5,6 +5,11 @@
 #include <strings.h>
 #include <unistd.h>
 
+#ifdef linux
+#include <signal.h>
+#include <wait.h>
+#endif
+
 #include "message.h"
 
 int g_sockfd;
