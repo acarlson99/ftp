@@ -52,15 +52,22 @@ char *parse_cmd(char *line, t_request *req) {
 	return (line + end);
 }
 
-void exec_internal(char *cmd) {
-	if (!strncmp(cmd, "cd ", 3)) {
-		cmd += 3;
-		cmd += strspn(cmd, " \t");
-		chdir(cmd);
+void exec_local(char *line) {
+	if (!strncmp(line, "cd ", 3)) {
+		line += 3;
+		line += strspn(line, " \t");
+		chdir(line);
 	}
 	else {
-		system(cmd);
+		system(line);
 	}
+}
+
+void make_request(char *line, int sockfd) {
+	t_request req;
+	bzero(&req, sizeof(req));
+	parse_cmd(line, &req);
+	write(sockfd, &req, sizeof(req));
 }
 
 void handle_conn(int sockfd) {
@@ -68,16 +75,12 @@ void handle_conn(int sockfd) {
 	size_t line_cap = 0;
 	ssize_t len = 0;
 	while ((len = getline(&line, &line_cap, stdin)) != -1) {
-		t_request req;
 		line[len - 1] = '\0';
-		bzero(&req, sizeof(req));
 		char *working = line + strspn(line, " \t");
-		if (working[0] == '!') {
-			exec_internal(working + 1);
-		}
+		if (working[0] == '!')
+			exec_local(working + 1);
 		else {
-			working = parse_cmd(line, &req);
-			write(sockfd, &req, sizeof(req));
+			make_request(working, sockfd);
 		}
 	}
 	free(line);
