@@ -6,6 +6,8 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include "message.h"
+
 int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
@@ -25,11 +27,23 @@ int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 	return (sockfd);
 }
 
+char *parse_cmd(char *line, t_request *req) {
+	(void)line;
+	req->cmd = cmd_ls;
+	return (line);
+}
+
 void handle_conn(int sockfd) {
 	char *line = NULL;
 	size_t line_cap = 0;
-	while ((getline(&line, &line_cap, stdin)) != -1) {
-		dprintf(sockfd, "%s", line);
+	ssize_t len = 0;
+	while ((len = getline(&line, &line_cap, stdin)) != -1) {
+		t_request req;
+		bzero(&req, sizeof(req));
+		char *working = parse_cmd(line, &req);
+		printf("%s\n", working);
+		write(sockfd, &req, sizeof(req));
+		/* dprintf(sockfd, "%s", line); */
 	}
 	free(line);
 }

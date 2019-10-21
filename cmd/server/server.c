@@ -5,6 +5,8 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include "message.h"
+
 int g_sockfd;
 
 void handle_child(int sig) {
@@ -50,9 +52,9 @@ void handle_conn(int connfd, int ii) {
 	dprintf(connfd, "Connection %d\n", ii);
 	char buf[256] = {0};
 	ssize_t size;
-	char cmd = 0;
-	while ((size = read(connfd, &cmd, sizeof(cmd))) > 0) {
-		printf("%d\n", cmd);
+	t_request request;
+	while ((size = read(connfd, &request, sizeof(request))) > 0) {
+		printf("%u %s\n", request.cmd, request.filename);
 		bzero(buf, sizeof(buf));
 	}
 	close(connfd);

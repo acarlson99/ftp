@@ -11,10 +11,19 @@ enum e_cmd {
 	cmd_quit,
 };
 
-struct s_message {
+struct s_request {
+	// get
 	uint8_t cmd;
-	uint8_t args;
+	// file
+	char filename[256];
 };
 
-typedef struct s_message t_message;
-typedef unsigned char t_arg[256];
+struct s_response {
+	// 0 if no error
+	uint8_t err;
+	// size of response. size = 0 if EOT
+	uint8_t size;
+};
+
+typedef struct s_request t_request;
+typedef unsigned char t_message[256];
