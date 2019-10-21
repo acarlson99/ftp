@@ -30,6 +30,21 @@ int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 char *parse_cmd(char *line, t_request *req) {
 	(void)line;
 	req->cmd = cmd_ls;
+
+	puts(line);
+	if (!strcmp(line, "ls\n"))
+		req->cmd = cmd_ls;
+	if (!strcmp(line, "cd\n"))
+		req->cmd = cmd_cd;
+	if (!strcmp(line, "get\n"))
+		req->cmd = cmd_get;
+	if (!strcmp(line, "put\n"))
+		req->cmd = cmd_put;
+	if (!strcmp(line, "pwd\n"))
+		req->cmd = cmd_pwd;
+	if (!strcmp(line, "quit\n"))
+		req->cmd = cmd_quit;
+
 	return (line);
 }
 
@@ -43,7 +58,6 @@ void handle_conn(int sockfd) {
 		char *working = parse_cmd(line, &req);
 		printf("%s\n", working);
 		write(sockfd, &req, sizeof(req));
-		/* dprintf(sockfd, "%s", line); */
 	}
 	free(line);
 }
