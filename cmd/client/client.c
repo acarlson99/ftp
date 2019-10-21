@@ -2,11 +2,11 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <unistd.h>
-#include <string.h>
 
+#include "fnv.h"
 #include "message.h"
 
 int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
@@ -28,25 +28,39 @@ int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 	return (sockfd);
 }
 
+size_t g_cmd_tab[10];
+char *g_cmd_str[] = {
+	[cmd_none] = "",	 [cmd_ls] = "ls",   [cmd_cd] = "cd",
+	[cmd_get] = "get",   [cmd_put] = "put", [cmd_pwd] = "pwd",
+	[cmd_quit] = "quit",
+};
+
 char *parse_cmd(char *line, t_request *req) {
 	(void)line;
-	req->cmd = cmd_ls;
+	req->cmd = cmd_none;
 
-	puts(line);
-	if (!strcmp(line, "ls\n"))
-		req->cmd = cmd_ls;
-	if (!strcmp(line, "cd\n"))
-		req->cmd = cmd_cd;
-	if (!strcmp(line, "get\n"))
-		req->cmd = cmd_get;
-	if (!strcmp(line, "put\n"))
-		req->cmd = cmd_put;
-	if (!strcmp(line, "pwd\n"))
-		req->cmd = cmd_pwd;
-	if (!strcmp(line, "quit\n"))
-		req->cmd = cmd_quit;
+	size_t end = strcspn(line, " \t\n");
+	size_t hash = fnv_hashn(line, end);
 
-	return (line);
+	for (unsigned ii = 0; ii < sizeof(g_cmd_str) / sizeof(*g_cmd_str); ++ii) {
+		if (hash == g_cmd_tab[ii]) {
+			req->cmd = ii;
+			break;
+		}
+	}
+
+	return (line + end);
+}
+
+void exec_internal(char *cmd) {
+	if (!strncmp(cmd, "cd ", 3)) {
+		cmd += 3;
+		cmd += strspn(cmd, " \t");
+		chdir(cmd);
+	}
+	else {
+		system(cmd);
+	}
 }
 
 void handle_conn(int sockfd) {
@@ -55,10 +69,16 @@ void handle_conn(int sockfd) {
 	ssize_t len = 0;
 	while ((len = getline(&line, &line_cap, stdin)) != -1) {
 		t_request req;
+		line[len - 1] = '\0';
 		bzero(&req, sizeof(req));
-		char *working = parse_cmd(line, &req);
-		printf("%s\n", working);
-		write(sockfd, &req, sizeof(req));
+		char *working = line + strspn(line, " \t");
+		if (working[0] == '!') {
+			exec_internal(working + 1);
+		}
+		else {
+			working = parse_cmd(line, &req);
+			write(sockfd, &req, sizeof(req));
+		}
 	}
 	free(line);
 }
@@ -79,6 +99,10 @@ int main(int argc, char **argv) {
 		puts("Invalid port");
 		return (1);
 	}
+
+	for (unsigned ii = 0; ii < sizeof(g_cmd_str) / sizeof(*g_cmd_str); ++ii)
+		if (g_cmd_str[ii])
+			g_cmd_tab[ii] = fnv_hash(g_cmd_str[ii]);
 
 	struct sockaddr_in servaddr;
 	int sockfd = config_socket(&servaddr, hostname, port);

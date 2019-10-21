@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 enum e_cmd {
+	cmd_none,
 	cmd_ls,
 	cmd_cd,
 	cmd_get,
@@ -26,4 +27,3 @@ struct s_response {
 };
 
 typedef struct s_request t_request;
-typedef unsigned char t_message[256];
