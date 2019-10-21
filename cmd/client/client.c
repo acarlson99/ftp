@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "message.h"
 
@@ -68,7 +69,11 @@ int main(int argc, char **argv) {
 		return (1);
 	}
 
-	char *hostname = argv[1];
+	char *hostname;
+	if (!strcmp(argv[1], "localhost"))
+		hostname = "127.0.0.1";
+	else
+		hostname = argv[1];
 	int port = atoi(argv[2]);
 	if (port < 1) {
 		puts("Invalid port");
