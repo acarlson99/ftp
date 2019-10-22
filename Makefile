@@ -22,14 +22,22 @@ $(CLIENT_NAME): $(CLIENT_BIN)
 
 $(CLIENT_BIN): $(CLIENT_OBJ)
 
+.PHONY: clean
 clean:
 	$(RM) $(SERVER_OBJ) $(CLIENT_OBJ)
 
+.PHONY: fclean
 fclean: clean
 	$(RM) $(SERVER_BIN) $(SERVER_NAME) $(CLIENT_BIN) $(CLIENT_NAME)
 
+.PHONY: re
 re: fclean all
 
+.PHONY: format
 debug: CFLAGS += -g -fsanitize=address
 debug: LDFLAGS += -fsanitize=address
 debug: re
+
+.PHONY: format
+format:
+	clang-format -i $(CLIENT_OBJ:.o=.c) $(SERVER_OBJ:.o=.c) include/*.h

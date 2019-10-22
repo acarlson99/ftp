@@ -1,6 +1,7 @@
 #include "fnv.h"
 
-size_t fnv_hash(char *input) {
+size_t fnv_hash(char *input)
+{
 	size_t hash;
 	size_t ii;
 
@@ -14,7 +15,8 @@ size_t fnv_hash(char *input) {
 	return (hash);
 }
 
-size_t fnv_hashn(char *input, size_t size) {
+size_t fnv_hashn(char *input, size_t size)
+{
 	size_t hash;
 	size_t ii;
 

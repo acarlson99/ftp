@@ -2,6 +2,8 @@
 #include "fnv.h"
 #include <arpa/inet.h>
 #include <errno.h>
+#include <getopt.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,7 +16,8 @@ char *g_cmd_str[7] = {
 	[cmd_quit] = "quit",
 };
 
-char *cmd_type(char *line, uint16_t *reqcmd) {
+char *cmd_type(char *line, uint16_t *reqcmd)
+{
 	*reqcmd = cmd_none;
 	size_t end = strcspn(line, " \t\n");
 	size_t hash = fnv_hashn(line, end);
@@ -28,7 +31,8 @@ char *cmd_type(char *line, uint16_t *reqcmd) {
 	return (line + strspn(line, " \t"));
 }
 
-int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
+int config_socket(struct sockaddr_in *sock, char *server_ipv4, int port)
+{
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
 		perror("Unable to create socket");
@@ -37,7 +41,7 @@ int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 	bzero(sock, sizeof(*sock));
 
 	sock->sin_family = AF_INET;
-	sock->sin_addr.s_addr = inet_addr(hostname);
+	sock->sin_addr.s_addr = inet_addr(server_ipv4);
 	sock->sin_port = htons(port);
 
 	if (connect(sockfd, (struct sockaddr *)sock, sizeof(*sock)) != 0) {
@@ -47,20 +51,21 @@ int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 	return (sockfd);
 }
 
-void exec_local(char *line) {
+void exec_local(char *line)
+{
 	if (!strncmp(line, "cd ", 3)) {
 		line += 3;
 		line += strspn(line, " \t");
 		chdir(line);
-	}
-	else {
+	} else {
 		system(line);
 	}
 }
 
 #define MAX(a, b) (a > b ? a : b)
 
-void handle_conn(int sockfd) {
+void handle_conn(int sockfd)
+{
 	char *line = NULL;
 	size_t line_cap = 0;
 	ssize_t len = 0;
@@ -85,29 +90,80 @@ void handle_conn(int sockfd) {
 	free(line);
 }
 
-int main(int argc, char **argv) {
-	if (argc != 3) {
-		printf("usage: %s ipv4-addr port\n", argv[0]);
+int hostname_to_ipv4(char *hostname, char *buf)
+{
+	struct hostent *he;
+	struct in_addr **addr_list;
+
+	if ((he = gethostbyname(hostname)) == NULL) {
+		herror("gethostbyname");
+		return (1);
+	}
+	addr_list = (struct in_addr **)he->h_addr_list;
+	if (!addr_list[0])
+		return (1);
+	strcpy(buf, inet_ntoa(*addr_list[0]));
+	return (0);
+}
+
+// ./client -n e1z3r2p2.42.us.org 8080
+// ./client -4 127.0.0.1 8080
+int main(int argc, char **argv)
+{
+	int ch;
+	char *server_ipv4 = NULL;
+	char hostbuf[256] = {0};
+	int port = 0;
+	int ipv4set = 0;
+	char *binname = argv[0];
+
+	while ((ch = getopt(argc, argv, "hn:4:")) != -1) {
+		switch (ch) {
+		case '4':
+			server_ipv4 = optarg;
+			ipv4set = 1;
+			break;
+		case 'n':
+			if (hostname_to_ipv4(optarg, hostbuf)) {
+				return (1);
+			} else {
+				server_ipv4 = hostbuf;
+				ipv4set = 1;
+			}
+			break;
+		case 'h':
+			printf("usage: %s [4n] port\n", binname);
+			printf("\t4 - ipv4 addr\n\tn - hostname\n");
+			return (0);
+		default:
+			printf("usage: %s [4n] port\n", binname);
+			return (1);
+		}
+		argc -= optind;
+		argv += optind;
+	}
+	if (!ipv4set) {
+		printf("Must specify server_ipv4/ipv4\n");
 		return (1);
 	}
 
-	char *hostname;
-	if (!strcmp(argv[1], "localhost"))
-		hostname = "127.0.0.1";
-	else
-		hostname = argv[1];
-	int port = atoi(argv[2]);
+	if (argc != 1) {
+		printf("Must specify port\n");
+		return (1);
+	}
+	port = atoi(argv[0]);
 	if (port < 1) {
 		puts("Invalid port");
 		return (1);
 	}
 
+	printf("Connecting to %s\n", server_ipv4);
 	for (unsigned ii = 0; ii < sizeof(g_cmd_str) / sizeof(*g_cmd_str); ++ii)
 		if (g_cmd_str[ii])
 			g_cmd_tab[ii] = fnv_hash(g_cmd_str[ii]);
 
 	struct sockaddr_in servaddr;
-	int sockfd = config_socket(&servaddr, hostname, port);
+	int sockfd = config_socket(&servaddr, server_ipv4, port);
 	if (sockfd < 0) {
 		return (1);
 	}

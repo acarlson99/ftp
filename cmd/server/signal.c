@@ -9,12 +9,14 @@
 
 int g_sockfd;
 
-void handle_child(int sig) {
+void handle_child(int sig)
+{
 	(void)sig;
 	wait(NULL);
 }
 
-void handle_sigint(int sig) {
+void handle_sigint(int sig)
+{
 	(void)sig;
 	puts("Cleaning up");
 	printf("%d\n", g_sockfd);

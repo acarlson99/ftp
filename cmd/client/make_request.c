@@ -5,14 +5,16 @@
 #include <stdio.h>
 #include <string.h>
 
-void make_request(char *line, uint16_t reqcmd, t_request *req, int sockfd) {
+void make_request(char *line, uint16_t reqcmd, t_request *req, int sockfd)
+{
 	(void)line;
 	req->cmd = htons(reqcmd);
 	printf("REQ: %d %d\n", req->cmd, reqcmd);
 	write(sockfd, req, sizeof(*req));
 }
 
-void handle_response(int sockfd, t_request *req) {
+void handle_response(int sockfd, t_request *req)
+{
 	struct s_response resp;
 	(void)sockfd;
 	/* read(sockfd, &resp, sizeof(resp)); */
@@ -35,8 +37,7 @@ void handle_response(int sockfd, t_request *req) {
 			printf("Unable to open file [%s]\n", filename);
 			perror("Unable to open file");
 		}
-	}
-	else {
+	} else {
 		fd = STDOUT_FILENO;
 	}
 

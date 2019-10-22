@@ -10,7 +10,8 @@
 
 int g_sockfd;
 
-int config_socket(struct sockaddr_in *sock, int port) {
+int config_socket(struct sockaddr_in *sock, int port)
+{
 	g_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (g_sockfd < 0) {
 		perror("Unable to create socket");
@@ -37,36 +38,37 @@ int config_socket(struct sockaddr_in *sock, int port) {
 	return (0);
 }
 
-void handle_request(int connfd, t_request *req) {
+void handle_request(int connfd, t_request *req)
+{
 	(void)req;
 	t_response resp;
 	resp.err = htons(0);
 	resp.size = htons(0);
-	// TODO: read file contents for PUT
-	// TODO: make sure file opened properly
-	int fd = open(req->filename, O_RDONLY);
-	/* int fd = open("Makefile", O_RDONLY); */
-	if (fd < 0) {
-		// TODO: make errors mean something
-		resp.err = htons(1);
-		perror("Unable to open file");
-		write(connfd, &resp, sizeof(resp));
-	}
-	char msgbuf[MAX_MSG_SIZE];
-	int16_t size = 0;
+	if (req->cmd == cmd_get) {
+		int fd = open(req->filename, O_RDONLY);
+		if (fd < 0) {
+			// TODO: make errors mean something
+			resp.err = htons(1);
+			perror("Unable to open file");
+			write(connfd, &resp, sizeof(resp));
+		}
+		char msgbuf[MAX_MSG_SIZE];
+		int16_t size = 0;
 
-	while ((size = read(fd, msgbuf, MAX_MSG_SIZE)) > 0) {
-		printf("READ %u from file %s\n", size, req->filename);
-		resp.size = htons(size);
+		while ((size = read(fd, msgbuf, MAX_MSG_SIZE)) > 0) {
+			printf("READ %u from file %s\n", size, req->filename);
+			resp.size = htons(size);
+			write(connfd, &resp, sizeof(resp));
+			write(connfd, msgbuf, size);
+		}
+		close(fd);
+		resp.size = htons(0);
 		write(connfd, &resp, sizeof(resp));
-		write(connfd, msgbuf, size);
 	}
-	close(fd);
-	resp.size = htons(0);
-	write(connfd, &resp, sizeof(resp));
 }
 
-void handle_conn(int connfd) {
+void handle_conn(int connfd)
+{
 	char buf[256] = {0};
 	ssize_t size;
 	t_request request;
@@ -78,7 +80,8 @@ void handle_conn(int connfd) {
 	close(connfd);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	if (argc != 2) {
 		printf("usage: %s port\n", argv[0]);
 		return (1);
