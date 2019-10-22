@@ -44,8 +44,8 @@ void handle_request(int connfd, t_request *req) {
 	resp.size = htons(0);
 	// TODO: read file contents for PUT
 	// TODO: make sure file opened properly
-	/* int fd = open(req->filename, O_RDONLY); */
-	int fd = open("Makefile", O_RDONLY);
+	int fd = open(req->filename, O_RDONLY);
+	/* int fd = open("Makefile", O_RDONLY); */
 	if (fd < 0) {
 		// TODO: make errors mean something
 		resp.err = htons(1);
@@ -56,11 +56,12 @@ void handle_request(int connfd, t_request *req) {
 	int16_t size = 0;
 
 	while ((size = read(fd, msgbuf, MAX_MSG_SIZE)) > 0) {
-		printf("READ %u from file %s\n", size, "Makefile");
+		printf("READ %u from file %s\n", size, req->filename);
 		resp.size = htons(size);
 		write(connfd, &resp, sizeof(resp));
 		write(connfd, msgbuf, size);
 	}
+	close(fd);
 	resp.size = htons(0);
 	write(connfd, &resp, sizeof(resp));
 }

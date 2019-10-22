@@ -31,8 +31,10 @@ void handle_response(int sockfd, t_request *req) {
 			++filename;
 		printf("Opening [%s]\n", filename);
 		fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT | O_EXCL, S_IRWXU);
-		if (fd < 0)
+		if (fd < 0) {
 			printf("Unable to open file [%s]\n", filename);
+			perror("Unable to open file");
+		}
 	}
 	else {
 		fd = STDOUT_FILENO;
