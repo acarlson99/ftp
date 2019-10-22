@@ -1,3 +1,4 @@
+#include "message.h"
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -9,8 +10,6 @@
 #include <signal.h>
 #include <wait.h>
 #endif
-
-#include "message.h"
 
 int g_sockfd;
 
@@ -56,8 +55,9 @@ int config_socket(struct sockaddr_in *sock, int port) {
 void handle_request(int connfd, t_request *req) {
 	(void)req;
 	t_response resp;
-	resp.err = htons(69);
+	resp.err = htons(0);
 	resp.size = htons(0);
+	// TODO: read file contents for PUT
 	write(connfd, &resp, sizeof(resp));
 }
 

@@ -18,5 +18,6 @@ void listen_response(int sockfd) {
 	do {
 		read(sockfd, &resp, sizeof(resp));
 		printf("RESP: %d %d\n", ntohs(resp.err), ntohs(resp.size));
-	} while (resp.size > 0);
+		// TODO: read message
+	} while (resp.size > 0 && !resp.err);
 }
