@@ -70,11 +70,12 @@ void handle_conn(int sockfd) {
 			t_request req;
 			bzero(&req, sizeof(req));
 			uint16_t reqcmd = 0;
-			char *working = cmd_type(line, &reqcmd);
+			working = cmd_type(line, &reqcmd);
+			strcpy(req.filename, "OUTFILE");
 			if (reqcmd == cmd_quit)
 				break;
 			make_request(working, reqcmd, &req, sockfd);
-			listen_response(sockfd);
+			handle_response(sockfd, &req);
 		}
 	}
 	free(line);
@@ -82,7 +83,7 @@ void handle_conn(int sockfd) {
 
 int main(int argc, char **argv) {
 	if (argc != 3) {
-		printf("usage: %s hostname port\n", argv[0]);
+		printf("usage: %s ipv4-addr port\n", argv[0]);
 		return (1);
 	}
 

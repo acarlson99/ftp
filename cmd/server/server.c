@@ -1,6 +1,7 @@
 #include "message.h"
 #include "mysignal.h"
 #include <errno.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +43,27 @@ void handle_request(int connfd, t_request *req) {
 	resp.err = htons(0);
 	resp.size = htons(0);
 	// TODO: read file contents for PUT
+	// TODO: make sure file opened properly
+	/* int fd = open(req->filename, O_RDONLY); */
+	int fd = open("Makefile", O_RDONLY);
+	if (fd < 0) {
+		// TODO: make errors mean something
+		resp.err = htons(1);
+		write(connfd, &resp, sizeof(resp));
+	}
+	char msgbuf[MAX_MSG_SIZE];
+	int16_t size = 0;
+
+	while ((size = read(fd, msgbuf, MAX_MSG_SIZE)) > 0) {
+		printf("READ %u\n", size);
+		resp.size = htons(size);
+		printf("%x\n", resp.err);
+		printf("WRITING TO CONN\n");
+		write(connfd, &resp, sizeof(resp));
+		printf("WRITING MSG\n");
+		write(connfd, msgbuf, size);
+	}
+	resp.size = htons(0);
 	write(connfd, &resp, sizeof(resp));
 }
 
