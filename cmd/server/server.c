@@ -49,18 +49,16 @@ void handle_request(int connfd, t_request *req) {
 	if (fd < 0) {
 		// TODO: make errors mean something
 		resp.err = htons(1);
+		perror("Unable to open file");
 		write(connfd, &resp, sizeof(resp));
 	}
 	char msgbuf[MAX_MSG_SIZE];
 	int16_t size = 0;
 
 	while ((size = read(fd, msgbuf, MAX_MSG_SIZE)) > 0) {
-		printf("READ %u\n", size);
+		printf("READ %u from file %s\n", size, "Makefile");
 		resp.size = htons(size);
-		printf("%x\n", resp.err);
-		printf("WRITING TO CONN\n");
 		write(connfd, &resp, sizeof(resp));
-		printf("WRITING MSG\n");
 		write(connfd, msgbuf, size);
 	}
 	resp.size = htons(0);
@@ -72,7 +70,7 @@ void handle_conn(int connfd) {
 	ssize_t size;
 	t_request request;
 	while ((size = read(connfd, &request, sizeof(request))) > 0) {
-		printf("%u %s\n", ntohs(request.cmd), request.filename);
+		printf("REQ: %u %s\n", ntohs(request.cmd), request.filename);
 		handle_request(connfd, &request);
 		bzero(buf, sizeof(buf));
 	}

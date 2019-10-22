@@ -24,7 +24,8 @@ char *cmd_type(char *line, uint16_t *reqcmd) {
 			break;
 		}
 	}
-	return (line + end);
+	line += end;
+	return (line + strspn(line, " \t"));
 }
 
 int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
@@ -57,6 +58,8 @@ void exec_local(char *line) {
 	}
 }
 
+#define MAX(a, b) (a > b ? a : b)
+
 void handle_conn(int sockfd) {
 	char *line = NULL;
 	size_t line_cap = 0;
@@ -71,9 +74,10 @@ void handle_conn(int sockfd) {
 			bzero(&req, sizeof(req));
 			uint16_t reqcmd = 0;
 			working = cmd_type(line, &reqcmd);
-			strcpy(req.filename, "OUTFILE");
 			if (reqcmd == cmd_quit)
 				break;
+			size_t filelen = strcspn(line, "\n");
+			strncpy(req.filename, working, MAX(filelen, MAX_FILENAME_SIZE));
 			make_request(working, reqcmd, &req, sockfd);
 			handle_response(sockfd, &req);
 		}

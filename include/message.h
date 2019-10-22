@@ -14,11 +14,13 @@ enum e_cmd {
 	cmd_quit,
 };
 
+#define MAX_FILENAME_SIZE 256
+
 struct s_request {
 	// get
 	uint16_t cmd;
 	// file
-	char filename[256];
+	char filename[MAX_FILENAME_SIZE];
 };
 
 struct s_response {

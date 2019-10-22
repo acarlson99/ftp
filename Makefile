@@ -30,5 +30,6 @@ fclean: clean
 
 re: fclean all
 
-debug: CFLAGS += -g
+debug: CFLAGS += -g -fsanitize=address
+debug: LDFLAGS += -fsanitize=address
 debug: re
