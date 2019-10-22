@@ -16,16 +16,17 @@ enum e_cmd {
 
 struct s_request {
 	// get
-	uint8_t cmd;
+	uint16_t cmd;
 	// file
 	char filename[256];
 };
 
 struct s_response {
 	// 0 if no error
-	uint8_t err;
+	uint16_t err;
 	// size of response. size = 0 if EOT
-	uint8_t size;
+	uint16_t size;
 };
 
 typedef struct s_request t_request;
+typedef struct s_response t_response;

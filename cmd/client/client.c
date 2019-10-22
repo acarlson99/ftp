@@ -14,18 +14,16 @@ char *g_cmd_str[7] = {
 	[cmd_quit] = "quit",
 };
 
-char *cmd_type(char *line, int *reqcmd) {
+char *cmd_type(char *line, uint16_t *reqcmd) {
 	*reqcmd = cmd_none;
 	size_t end = strcspn(line, " \t\n");
 	size_t hash = fnv_hashn(line, end);
-
 	for (unsigned ii = 0; ii < sizeof(g_cmd_str) / sizeof(*g_cmd_str); ++ii) {
 		if (hash == g_cmd_tab[ii]) {
 			*reqcmd = ii;
 			break;
 		}
 	}
-
 	return (line + end);
 }
 
@@ -71,12 +69,11 @@ void handle_conn(int sockfd) {
 		else {
 			t_request req;
 			bzero(&req, sizeof(req));
-			int reqcmd = 0;
+			uint16_t reqcmd = 0;
 			char *working = cmd_type(line, &reqcmd);
 			if (reqcmd == cmd_quit)
 				break;
-			req.cmd = reqcmd;
-			make_request(working, &req, sockfd);
+			make_request(working, reqcmd, &req, sockfd);
 			listen_response(sockfd);
 		}
 	}

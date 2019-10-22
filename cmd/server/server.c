@@ -53,13 +53,21 @@ int config_socket(struct sockaddr_in *sock, int port) {
 	return (0);
 }
 
-void handle_conn(int connfd, int ii) {
-	dprintf(connfd, "Connection %d\n", ii);
+void handle_request(int connfd, t_request *req) {
+	(void)req;
+	t_response resp;
+	resp.err = htons(69);
+	resp.size = htons(0);
+	write(connfd, &resp, sizeof(resp));
+}
+
+void handle_conn(int connfd) {
 	char buf[256] = {0};
 	ssize_t size;
 	t_request request;
 	while ((size = read(connfd, &request, sizeof(request))) > 0) {
-		printf("%u %s\n", request.cmd, request.filename);
+		printf("%u %s\n", ntohs(request.cmd), request.filename);
+		handle_request(connfd, &request);
 		bzero(buf, sizeof(buf));
 	}
 	close(connfd);
@@ -89,19 +97,17 @@ int main(int argc, char **argv) {
 	printf("Listening on port %d\n", port);
 	socklen_t len = sizeof(cli);
 	int connfd;
-	int ii = 0;
 	while ((connfd = accept(g_sockfd, (struct sockaddr *)&cli, &len))) {
 		if (connfd < 0) {
 			perror("Unable to accept connection");
 			continue;
 		}
 		if (fork() == 0) {
-			handle_conn(connfd, ii);
+			handle_conn(connfd);
 			close(g_sockfd);
 			exit(0);
 		}
 		signal(SIGCHLD, handle_child);
 		close(connfd);
-		ii++;
 	}
 }

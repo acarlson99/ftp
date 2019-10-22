@@ -7,3 +7,4 @@ cmd/client/client
 .dir-locals.el
 .nfs.*
 *.out
+/.vscode
