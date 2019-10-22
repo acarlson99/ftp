@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#define MAX_MSG_SIZE 1024
+
 enum e_cmd {
 	cmd_none,
 	cmd_ls,

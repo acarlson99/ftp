@@ -1,3 +1,5 @@
+#include "client.h"
+#include "fnv.h"
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netinet/in.h>
@@ -6,8 +8,26 @@
 #include <strings.h>
 #include <unistd.h>
 
-#include "fnv.h"
-#include "message.h"
+char *g_cmd_str[7] = {
+	[cmd_none] = "",	 [cmd_ls] = "ls",   [cmd_cd] = "cd",
+	[cmd_get] = "get",   [cmd_put] = "put", [cmd_pwd] = "pwd",
+	[cmd_quit] = "quit",
+};
+
+char *cmd_type(char *line, int *reqcmd) {
+	*reqcmd = cmd_none;
+	size_t end = strcspn(line, " \t\n");
+	size_t hash = fnv_hashn(line, end);
+
+	for (unsigned ii = 0; ii < sizeof(g_cmd_str) / sizeof(*g_cmd_str); ++ii) {
+		if (hash == g_cmd_tab[ii]) {
+			*reqcmd = ii;
+			break;
+		}
+	}
+
+	return (line + end);
+}
 
 int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -28,30 +48,6 @@ int config_socket(struct sockaddr_in *sock, char *hostname, int port) {
 	return (sockfd);
 }
 
-size_t g_cmd_tab[10];
-char *g_cmd_str[] = {
-	[cmd_none] = "",	 [cmd_ls] = "ls",   [cmd_cd] = "cd",
-	[cmd_get] = "get",   [cmd_put] = "put", [cmd_pwd] = "pwd",
-	[cmd_quit] = "quit",
-};
-
-char *parse_cmd(char *line, t_request *req) {
-	(void)line;
-	req->cmd = cmd_none;
-
-	size_t end = strcspn(line, " \t\n");
-	size_t hash = fnv_hashn(line, end);
-
-	for (unsigned ii = 0; ii < sizeof(g_cmd_str) / sizeof(*g_cmd_str); ++ii) {
-		if (hash == g_cmd_tab[ii]) {
-			req->cmd = ii;
-			break;
-		}
-	}
-
-	return (line + end);
-}
-
 void exec_local(char *line) {
 	if (!strncmp(line, "cd ", 3)) {
 		line += 3;
@@ -61,13 +57,6 @@ void exec_local(char *line) {
 	else {
 		system(line);
 	}
-}
-
-void make_request(char *line, int sockfd) {
-	t_request req;
-	bzero(&req, sizeof(req));
-	parse_cmd(line, &req);
-	write(sockfd, &req, sizeof(req));
 }
 
 void handle_conn(int sockfd) {
@@ -80,7 +69,15 @@ void handle_conn(int sockfd) {
 		if (working[0] == '!')
 			exec_local(working + 1);
 		else {
-			make_request(working, sockfd);
+			t_request req;
+			bzero(&req, sizeof(req));
+			int reqcmd = 0;
+			char *working = cmd_type(line, &reqcmd);
+			if (reqcmd == cmd_quit)
+				break;
+			req.cmd = reqcmd;
+			make_request(working, &req, sockfd);
+			listen_response(sockfd);
 		}
 	}
 	free(line);
