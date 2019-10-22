@@ -1,4 +1,5 @@
 #include "message.h"
+#include "mysignal.h"
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -6,24 +7,7 @@
 #include <strings.h>
 #include <unistd.h>
 
-#ifdef linux
-#include <signal.h>
-#include <wait.h>
-#endif
-
 int g_sockfd;
-
-void handle_child(int sig) {
-	(void)sig;
-	wait(NULL);
-}
-
-void handle_sigint(int sig) {
-	(void)sig;
-	puts("Cleaning up");
-	close(g_sockfd);
-	exit(0);
-}
 
 int config_socket(struct sockaddr_in *sock, int port) {
 	g_sockfd = socket(AF_INET, SOCK_STREAM, 0);

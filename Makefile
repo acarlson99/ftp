@@ -1,12 +1,12 @@
 CFLAGS = -Wall -Wextra -Werror -I include/
 
 SERVER_DIR = cmd/server/
-SERVER_OBJ = $(addprefix $(SERVER_DIR), server.o)
+SERVER_OBJ = $(addprefix $(SERVER_DIR), server.o signal.o)
 SERVER_BIN = $(addprefix $(SERVER_DIR), $(SERVER_NAME))
 SERVER_NAME = server
 
 CLIENT_DIR = cmd/client/
-CLIENT_OBJ = $(addprefix $(CLIENT_DIR), client.o fnv.o handle_request.o)
+CLIENT_OBJ = $(addprefix $(CLIENT_DIR), client.o fnv.o make_request.o)
 CLIENT_BIN = $(addprefix $(CLIENT_DIR), $(CLIENT_NAME))
 CLIENT_NAME = client
 

@@ -1,13 +1,12 @@
 #include "client.h"
 #include "fnv.h"
-#include <string.h>
-#include <stdio.h>
 #include <arpa/inet.h>
+#include <stdio.h>
+#include <string.h>
 
 void make_request(char *line, uint16_t reqcmd, t_request *req, int sockfd) {
 	(void)line;
 	req->cmd = htons(reqcmd);
-	// req->cmd = reqcmd;
 	printf("REQ: %d %d\n", req->cmd, reqcmd);
 	write(sockfd, req, sizeof(*req));
 }
