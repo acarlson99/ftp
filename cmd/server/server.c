@@ -1,7 +1,6 @@
-#include "message.h"
+#include "command.h"
 #include "mysignal.h"
 #include <errno.h>
-#include <fcntl.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,27 +43,11 @@ void handle_request(int connfd, t_request *req)
 	t_response resp;
 	resp.err = htons(0);
 	resp.size = htons(0);
+	// TODO: not handled properly
 	if (req->cmd == cmd_get) {
-		int fd = open(req->filename, O_RDONLY);
-		if (fd < 0) {
-			// TODO: make errors mean something
-			resp.err = htons(1);
-			perror("Unable to open file");
-			write(connfd, &resp, sizeof(resp));
-		}
-		char msgbuf[MAX_MSG_SIZE];
-		int16_t size = 0;
-
-		while ((size = read(fd, msgbuf, MAX_MSG_SIZE)) > 0) {
-			printf("READ %u from file %s\n", size, req->filename);
-			resp.size = htons(size);
-			write(connfd, &resp, sizeof(resp));
-			write(connfd, msgbuf, size);
-		}
-		close(fd);
-		resp.size = htons(0);
-		write(connfd, &resp, sizeof(resp));
+		command_get(connfd, &resp, req);
 	}
+	write(connfd, &resp, sizeof(resp));
 }
 
 void handle_conn(int connfd)
@@ -109,8 +92,7 @@ int main(int argc, char **argv)
 		if (connfd < 0) {
 			perror("Unable to accept connection");
 			continue;
-		}
-		if (fork() == 0) {
+		} else if (fork() == 0) {
 			handle_conn(connfd);
 			close(g_sockfd);
 			exit(0);

@@ -11,7 +11,10 @@ enum e_cmd {
 	cmd_get,
 	cmd_put,
 	cmd_pwd,
+	// Not server commands
 	cmd_quit,
+	cmd_help,
+	cmd_exec,
 };
 
 #define MAX_FILENAME_SIZE 256

@@ -1,7 +1,7 @@
 CFLAGS = -Wall -Wextra -Werror -I include/
 
 SERVER_DIR = cmd/server/
-SERVER_OBJ = $(addprefix $(SERVER_DIR), server.o signal.o)
+SERVER_OBJ = $(addprefix $(SERVER_DIR), server.o signal.o command.o)
 SERVER_BIN = $(addprefix $(SERVER_DIR), $(SERVER_NAME))
 SERVER_NAME = server
 

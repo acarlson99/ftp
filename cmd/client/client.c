@@ -10,13 +10,13 @@
 #include <strings.h>
 #include <unistd.h>
 
-char *g_cmd_str[7] = {
-	[cmd_none] = "",	 [cmd_ls] = "ls",   [cmd_cd] = "cd",
-	[cmd_get] = "get",   [cmd_put] = "put", [cmd_pwd] = "pwd",
-	[cmd_quit] = "quit",
+char *g_cmd_str[9] = {
+	[cmd_none] = "",	 [cmd_ls] = "ls",	 [cmd_cd] = "cd",
+	[cmd_get] = "get",   [cmd_put] = "put",   [cmd_pwd] = "pwd",
+	[cmd_quit] = "quit", [cmd_help] = "help", [cmd_exec] = "!",
 };
 
-char *cmd_type(char *line, uint16_t *reqcmd)
+char *get_cmd_type(char *line, uint16_t *reqcmd)
 {
 	*reqcmd = cmd_none;
 	size_t end = strcspn(line, " \t\n");
@@ -72,24 +72,39 @@ void handle_conn(int sockfd)
 	while ((len = getline(&line, &line_cap, stdin)) != -1) {
 		line[len - 1] = '\0';
 		char *working = line + strspn(line, " \t");
-		if (working[0] == '!')
-			exec_local(working + 1);
-		else {
-			t_request req;
-			bzero(&req, sizeof(req));
-			uint16_t reqcmd = 0;
-			working = cmd_type(line, &reqcmd);
-			if (reqcmd == cmd_quit)
-				break;
-			size_t filelen = strcspn(line, "\n");
-			strncpy(req.filename, working, MAX(filelen, MAX_FILENAME_SIZE));
+		t_request req;
+		bzero(&req, sizeof(req));
+		uint16_t reqcmd = 0;
+		working = get_cmd_type(line, &reqcmd);
+
+		size_t arg_len;
+		switch (reqcmd) {
+		case cmd_exec:
+			exec_local(working);
+			break;
+		case cmd_quit:
+			goto end;
+			break; // wait...
+		case cmd_help:
+			printf("HELP MESSAGE\n");
+		case cmd_none:
+			// TODO: this is happening more than it should (!cd /tmp)
+			printf("Unrecognized command\n");
+			break;
+		default:
+			arg_len = strcspn(line, "\n");
+			strncpy(req.filename, working, MAX(arg_len, MAX_FILENAME_SIZE));
 			make_request(working, reqcmd, &req, sockfd);
 			handle_response(sockfd, &req);
 		}
 	}
+end:
 	free(line);
 }
 
+#define HOSTBUF_SIZE 256
+
+// TODO: make error printf print to stderr
 int hostname_to_ipv4(char *hostname, char *buf)
 {
 	struct hostent *he;
@@ -100,9 +115,11 @@ int hostname_to_ipv4(char *hostname, char *buf)
 		return (1);
 	}
 	addr_list = (struct in_addr **)he->h_addr_list;
-	if (!addr_list[0])
+	if (!addr_list[0]) {
+		printf("Address list index not found\n");
 		return (1);
-	strcpy(buf, inet_ntoa(*addr_list[0]));
+	}
+	strncpy(buf, inet_ntoa(*addr_list[0]), HOSTBUF_SIZE);
 	return (0);
 }
 
@@ -112,7 +129,7 @@ int main(int argc, char **argv)
 {
 	int ch;
 	char *server_ipv4 = NULL;
-	char hostbuf[256] = {0};
+	char hostbuf[HOSTBUF_SIZE] = {0};
 	int port = 0;
 	int ipv4set = 0;
 	char *binname = argv[0];
