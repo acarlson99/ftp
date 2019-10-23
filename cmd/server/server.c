@@ -2,6 +2,7 @@
 #include "mysignal.h"
 #include <errno.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -37,16 +38,26 @@ int config_socket(struct sockaddr_in *sock, int port)
 	return (0);
 }
 
+void (*cmd_ftab[])(int, t_response *, t_request *) = {
+	[cmd_ls] = command_ls,   [cmd_cd] = command_cd,   [cmd_pwd] = command_pwd,
+	[cmd_get] = command_get, [cmd_put] = command_put, [cmd_quit] = command_quit,
+};
+
 void handle_request(int connfd, t_request *req)
 {
-	(void)req;
 	t_response resp;
-	resp.err = htons(0);
+	resp.err = htons(err_none);
 	resp.size = htons(0);
-	// TODO: not handled properly
-	if (req->cmd == cmd_get) {
-		command_get(connfd, &resp, req);
+	uint16_t reqcmd = ntohs(req->cmd);
+	if (reqcmd < 0 || reqcmd > sizeof(cmd_ftab) / sizeof(*cmd_ftab)
+		|| !cmd_ftab[reqcmd]) {
+		resp.err = htons(err_unknowncmd);
+		goto end;
 	}
+	// Writes headers/bodies then sets error and size to be sent at end
+	cmd_ftab[reqcmd](connfd, &resp, req);
+
+end:
 	write(connfd, &resp, sizeof(resp));
 }
 

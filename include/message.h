@@ -4,17 +4,26 @@
 
 #define MAX_MSG_SIZE 1024
 
+// NOTE: server commands smaller values to optimize jump table size
 enum e_cmd {
-	cmd_none,
+	// Server commands
 	cmd_ls,
 	cmd_cd,
+	cmd_pwd,
 	cmd_get,
 	cmd_put,
-	cmd_pwd,
 	// Not server commands
 	cmd_quit,
 	cmd_help,
-	cmd_exec,
+	// Default value
+	cmd_none,
+};
+
+enum e_resp_err {
+	err_none,		// no error
+	err_unknowncmd, // unknown command sent
+	err_badfile,	// file not found or illegal
+	err_illegal,	// cd outsize home
 };
 
 #define MAX_FILENAME_SIZE 256

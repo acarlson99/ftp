@@ -10,10 +10,10 @@
 #include <strings.h>
 #include <unistd.h>
 
-char *g_cmd_str[9] = {
-	[cmd_none] = "",	 [cmd_ls] = "ls",	 [cmd_cd] = "cd",
-	[cmd_get] = "get",   [cmd_put] = "put",   [cmd_pwd] = "pwd",
-	[cmd_quit] = "quit", [cmd_help] = "help", [cmd_exec] = "!",
+char *g_cmd_str[8] = {
+	[cmd_ls] = "ls",	 [cmd_cd] = "cd",   [cmd_pwd] = "pwd",
+	[cmd_get] = "get",   [cmd_put] = "put", [cmd_quit] = "quit",
+	[cmd_help] = "help", [cmd_none] = "",
 };
 
 char *get_cmd_type(char *line, uint16_t *reqcmd)
@@ -69,35 +69,45 @@ void handle_conn(int sockfd)
 	char *line = NULL;
 	size_t line_cap = 0;
 	ssize_t len = 0;
-	while ((len = getline(&line, &line_cap, stdin)) != -1) {
+	for (;;) {
+		write(1, "> ", 2);
+		len = getline(&line, &line_cap, stdin);
+		if (len == -1)
+			break;
 		line[len - 1] = '\0';
 		char *working = line + strspn(line, " \t");
+
+		// handle !ls etc.
+		if (working[0] == '!') {
+			exec_local(working + 1);
+			continue;
+		}
+
 		t_request req;
 		bzero(&req, sizeof(req));
 		uint16_t reqcmd = 0;
 		working = get_cmd_type(line, &reqcmd);
 
 		size_t arg_len;
+		// handle internal commands
 		switch (reqcmd) {
-		case cmd_exec:
-			exec_local(working);
-			break;
 		case cmd_quit:
 			goto end;
-			break; // wait...
+			break;
 		case cmd_help:
 			printf("HELP MESSAGE\n");
+			break;
 		case cmd_none:
-			// TODO: this is happening more than it should (!cd /tmp)
 			printf("Unrecognized command\n");
 			break;
 		default:
 			arg_len = strcspn(line, "\n");
 			strncpy(req.filename, working, MAX(arg_len, MAX_FILENAME_SIZE));
-			make_request(working, reqcmd, &req, sockfd);
-			handle_response(sockfd, &req);
+			if (make_request(working, reqcmd, &req, sockfd) == ERR_FATAL)
+				goto end;
 		}
 	}
+
 end:
 	free(line);
 }

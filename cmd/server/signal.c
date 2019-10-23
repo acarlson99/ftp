@@ -1,11 +1,8 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/wait.h> // May be problematic on linux
 #include <unistd.h>
-
-#ifdef linux
-#include <signal.h>
-#include <wait.h>
-#endif
 
 int g_sockfd;
 
