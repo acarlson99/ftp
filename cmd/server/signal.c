@@ -9,6 +9,7 @@ int g_sockfd;
 void handle_child(int sig)
 {
 	(void)sig;
+	printf("Destroying child process\n");
 	wait(NULL);
 }
 

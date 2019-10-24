@@ -133,6 +133,8 @@ int hostname_to_ipv4(char *hostname, char *buf)
 	return (0);
 }
 
+void usage(char *binname) { printf("usage: %s [4n] port\n", binname); }
+
 // ./client -n e1z3r2p2.42.us.org 8080
 // ./client -4 127.0.0.1 8080
 int main(int argc, char **argv)
@@ -163,7 +165,7 @@ int main(int argc, char **argv)
 			printf("\t4 - ipv4 addr\n\tn - hostname\n");
 			return (0);
 		default:
-			printf("usage: %s [4n] port\n", binname);
+			usage(binname);
 			return (1);
 		}
 	}
@@ -171,16 +173,19 @@ int main(int argc, char **argv)
 	argv += optind;
 	if (!ipv4set) {
 		printf("Must specify server_ipv4/ipv4\n");
+		usage(binname);
 		return (1);
 	}
 
 	if (argc != 1) {
 		printf("Must specify port\n");
+		usage(binname);
 		return (1);
 	}
 	port = atoi(argv[0]);
 	if (port < 1) {
-		puts("Invalid port");
+		printf("Invalid port `%s`\n", argv[0]);
+		usage(binname);
 		return (1);
 	}
 
