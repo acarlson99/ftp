@@ -60,11 +60,3 @@ void command_pwd(int connfd, t_response *resp, t_request *req)
 	(void)resp;
 	(void)req;
 }
-
-void command_quit(int connfd, t_response *resp, t_request *req)
-{
-	printf("%s\n", __FUNCTION__);
-	(void)connfd;
-	(void)resp;
-	(void)req;
-}

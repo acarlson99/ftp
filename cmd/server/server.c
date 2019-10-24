@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 int g_sockfd;
@@ -40,7 +41,7 @@ int config_socket(struct sockaddr_in *sock, int port)
 
 void (*cmd_ftab[])(int, t_response *, t_request *) = {
 	[cmd_ls] = command_ls,   [cmd_cd] = command_cd,   [cmd_pwd] = command_pwd,
-	[cmd_get] = command_get, [cmd_put] = command_put, [cmd_quit] = command_quit,
+	[cmd_get] = command_get, [cmd_put] = command_put,
 };
 
 void handle_request(int connfd, t_request *req)
@@ -51,12 +52,10 @@ void handle_request(int connfd, t_request *req)
 	uint16_t reqcmd = ntohs(req->cmd);
 	if (reqcmd > sizeof(cmd_ftab) / sizeof(*cmd_ftab) || !cmd_ftab[reqcmd]) {
 		resp.err = htons(err_unknowncmd);
-		goto end;
+	} else {
+		// Writes headers/bodies then sets error and size to be sent at end
+		cmd_ftab[reqcmd](connfd, &resp, req);
 	}
-	// Writes headers/bodies then sets error and size to be sent at end
-	cmd_ftab[reqcmd](connfd, &resp, req);
-
-end:
 	write(connfd, &resp, sizeof(resp));
 }
 
@@ -73,22 +72,53 @@ void handle_conn(int connfd)
 	close(connfd);
 }
 
+void usage(char *binname) { printf("usage: %s port\n", binname); }
+
 int main(int argc, char **argv)
 {
-	if (argc != 2) {
+	int ch;
+	const char *basedir = "./FTP";
+
+	while ((ch = getopt(argc, argv, "d:")) != -1) {
+		switch (ch) {
+		case 'd':
+			basedir = optarg;
+			break;
+		default:
+			printf("usage: %s port\n", argv[0]);
+			return (1);
+			break;
+		}
+	}
+	argc -= optind;
+	argv += optind;
+
+	// make dir
+	if (mkdir(basedir, 0777)) {
+		perror("Unable to create directory");
+	} else {
+		printf("Directory made\n");
+	}
+	if (chdir(basedir)) {
+		perror("Unable to chdir into directory");
+		return (1);
+	}
+	printf("Chdir into %s\n", basedir);
+
+	if (argc != 1) {
 		printf("usage: %s port\n", argv[0]);
 		return (1);
 	}
 
-	int port = atoi(argv[1]);
+	int port = atoi(argv[0]);
 	if (port < 1) {
 		puts("Invalid port");
 	}
-	struct sockaddr_in servaddr, cli;
 
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
 
+	struct sockaddr_in servaddr, cli;
 	int bad = config_socket(&servaddr, port);
 	if (bad) {
 		close(g_sockfd);

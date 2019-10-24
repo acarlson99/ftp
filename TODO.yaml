@@ -1,0 +1,11 @@
+TODO:
+  - commands:
+    - ls
+    - cd
+    - put
+    - pwd
+  - restrict path
+
+DONE:
+  - commands:
+    - put
