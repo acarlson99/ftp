@@ -166,9 +166,9 @@ int main(int argc, char **argv)
 			printf("usage: %s [4n] port\n", binname);
 			return (1);
 		}
-		argc -= optind;
-		argv += optind;
 	}
+	argc -= optind;
+	argv += optind;
 	if (!ipv4set) {
 		printf("Must specify server_ipv4/ipv4\n");
 		return (1);

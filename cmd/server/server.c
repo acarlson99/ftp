@@ -49,8 +49,7 @@ void handle_request(int connfd, t_request *req)
 	resp.err = htons(err_none);
 	resp.size = htons(0);
 	uint16_t reqcmd = ntohs(req->cmd);
-	if (reqcmd < 0 || reqcmd > sizeof(cmd_ftab) / sizeof(*cmd_ftab)
-		|| !cmd_ftab[reqcmd]) {
+	if (reqcmd > sizeof(cmd_ftab) / sizeof(*cmd_ftab) || !cmd_ftab[reqcmd]) {
 		resp.err = htons(err_unknowncmd);
 		goto end;
 	}
