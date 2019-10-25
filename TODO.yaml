@@ -1,12 +1,13 @@
 TODO:
-  - comprehensive error messages
-  - restrict path
-  - commands:
-    - cd
-    - put
-    - pwd
+  - clean up client/server output
+  - make path restriction better
 
 DONE:
+  - restrict path
+  - comprehensive error messages
   - commands:
     - ls
+    - cd
+    - pwd
+    - get
     - put

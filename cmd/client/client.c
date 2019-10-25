@@ -133,6 +133,13 @@ int hostname_to_ipv4(char *hostname, char *buf)
 	return (0);
 }
 
+void handle_sigpipe(int sig)
+{
+	(void)sig;
+	printf("Interrupted connection\n");
+	exit(1);
+}
+
 void usage(char *binname) { printf("usage: %s [4n] port\n", binname); }
 
 // ./client -n e1z3r2p2.42.us.org 8080
@@ -188,6 +195,8 @@ int main(int argc, char **argv)
 		usage(binname);
 		return (1);
 	}
+
+	signal(SIGPIPE, handle_sigpipe);
 
 	printf("Connecting to %s\n", server_ipv4);
 	for (unsigned ii = 0; ii < sizeof(g_cmd_str) / sizeof(*g_cmd_str); ++ii)

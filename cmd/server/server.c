@@ -58,6 +58,8 @@ void handle_request(int connfd, t_request *req)
 		cmd_ftab[reqcmd](connfd, &resp, req);
 	}
 	write(connfd, &resp, sizeof(resp));
+	if (resp.err == htons(err_fatal))
+		exit(1);
 }
 
 void handle_conn(int connfd)
@@ -69,7 +71,6 @@ void handle_conn(int connfd)
 	g_path_idx = 0;
 	bzero(g_path, sizeof(g_path));
 	while ((size = read(connfd, &request, sizeof(request))) > 0) {
-		printf("REQ: %u %s\n", ntohs(request.cmd), request.filename);
 		handle_request(connfd, &request);
 		bzero(buf, sizeof(buf));
 	}
@@ -109,6 +110,7 @@ int main(int argc, char **argv)
 	}
 	printf("Chdir into %s\n", basedir);
 	g_home_dir = getcwd(NULL, 0);
+	g_home_len = strlen(g_home_dir);
 
 	if (argc != 1) {
 		printf("usage: %s port\n", argv[0]);
@@ -145,4 +147,5 @@ int main(int argc, char **argv)
 		signal(SIGCHLD, handle_child);
 		close(connfd);
 	}
+	free(g_home_dir);
 }

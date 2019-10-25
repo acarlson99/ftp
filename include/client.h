@@ -7,7 +7,7 @@
 #define ERR_MINOR 1
 #define ERR_FATAL 2
 
-char *g_err_str[5];
+char *g_err_str[6];
 char *g_cmd_str[8];
 size_t g_cmd_tab[sizeof(g_cmd_str) / sizeof(*g_cmd_str)];
 
