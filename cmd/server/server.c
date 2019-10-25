@@ -1,3 +1,4 @@
+#include "server.h"
 #include "command.h"
 #include "mysignal.h"
 #include <errno.h>
@@ -64,6 +65,9 @@ void handle_conn(int connfd)
 	char buf[256] = {0};
 	ssize_t size;
 	t_request request;
+
+	g_path_idx = 0;
+	bzero(g_path, sizeof(g_path));
 	while ((size = read(connfd, &request, sizeof(request))) > 0) {
 		printf("REQ: %u %s\n", ntohs(request.cmd), request.filename);
 		handle_request(connfd, &request);
@@ -104,6 +108,7 @@ int main(int argc, char **argv)
 		return (1);
 	}
 	printf("Chdir into %s\n", basedir);
+	g_home_dir = getcwd(NULL, 0);
 
 	if (argc != 1) {
 		printf("usage: %s port\n", argv[0]);

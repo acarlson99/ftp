@@ -25,6 +25,7 @@ enum e_resp_err {
 	err_badfile,	// file not found or illegal
 	err_baddir,		// dir not found or illegal
 	err_illegal,	// cd outsize home
+	err_owotoobig,  // cd into too long directory
 };
 
 #define MAX_FILENAME_SIZE 256

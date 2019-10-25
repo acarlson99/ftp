@@ -1,4 +1,5 @@
 #include "message.h"
+#include "server.h"
 #include <dirent.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -14,6 +15,8 @@ void command_ls(int connfd, t_response *resp, t_request *req)
 	DIR *dr = opendir(".");
 
 	(void)req;
+
+	printf("HOME: %s\n", g_home_dir);
 
 	printf("%s\n", __FUNCTION__);
 
