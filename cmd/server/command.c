@@ -83,13 +83,11 @@ void command_pwd(int connfd, t_response *resp, t_request *req)
 
 	size -= g_home_len;
 
-	write(1, msgbuf, size);
 	fflush(stdout);
 
 	resp->size = htons(size);
 	write(connfd, resp, sizeof(*resp));
 	write(connfd, msgbuf, size);
-	write(1, msgbuf, size);
 
 	resp->size = htons(0);
 	resp->err = htons(err_none);
