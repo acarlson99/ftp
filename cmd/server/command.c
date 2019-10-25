@@ -19,7 +19,7 @@ void command_ls(int connfd, t_response *resp, t_request *req)
 
 	if (!dr) {
 		// TODO: handle error
-		resp->err = htons(err_badfile);
+		resp->err = htons(err_baddir);
 		goto end;
 	}
 
@@ -43,8 +43,13 @@ void command_cd(int connfd, t_response *resp, t_request *req)
 {
 	printf("%s\n", __FUNCTION__);
 	(void)connfd;
-	(void)resp;
-	(void)req;
+
+	// TODO: validate cd arg
+	int err = chdir(req->filename);
+	if (err) {
+		perror("Unable to chdir");
+		resp->err = htons(err_baddir);
+	}
 }
 
 #include <stdlib.h>
@@ -61,6 +66,7 @@ void command_pwd(int connfd, t_response *resp, t_request *req)
 void command_get(int connfd, t_response *resp, t_request *req)
 {
 	printf("%s\n", __FUNCTION__);
+	// TODO: validste get arg
 	int fd = open(req->filename, O_RDONLY);
 	if (fd < 0) {
 		resp->err = htons(err_badfile);
@@ -87,6 +93,7 @@ void command_get(int connfd, t_response *resp, t_request *req)
 	resp->size = htons(0);
 }
 
+// reverse get
 void command_put(int connfd, t_response *resp, t_request *req)
 {
 	printf("%s\n", __FUNCTION__);

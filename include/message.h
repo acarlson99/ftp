@@ -23,6 +23,7 @@ enum e_resp_err {
 	err_none,		// no error
 	err_unknowncmd, // unknown command sent
 	err_badfile,	// file not found or illegal
+	err_baddir,		// dir not found or illegal
 	err_illegal,	// cd outsize home
 };
 
@@ -32,7 +33,7 @@ struct s_request {
 	// get
 	uint16_t cmd;
 	// file
-	char filename[MAX_FILENAME_SIZE];
+	char filename[MAX_FILENAME_SIZE + 1];
 };
 
 struct s_response {

@@ -5,6 +5,12 @@
 #include <stdio.h>
 #include <string.h>
 
+char *g_err_str[] = {
+	[err_none] = "none",	   [err_unknowncmd] = "unknowncmd",
+	[err_badfile] = "badfile", [err_baddir] = "baddir",
+	[err_illegal] = "illegal",
+};
+
 // return 0 on success, 1 on minor err, 2 on fatal err
 int handle_response(int sockfd, t_request *req)
 {
@@ -44,7 +50,10 @@ int handle_response(int sockfd, t_request *req)
 		size = ntohs(resp.size);
 		/* printf("RESP: %d %d\n", err, size); */
 		if (err) {
-			printf("ERR: %d\n", err);
+			if (err < sizeof(g_err_str) / sizeof(*g_err_str))
+				printf("ERR: %s\n", g_err_str[err]);
+			else
+				printf("ERR: Unknown error %d\n", err);
 		}
 		if (size <= 0)
 			break;
@@ -61,6 +70,14 @@ int handle_response(int sockfd, t_request *req)
 	return (ret);
 }
 
+int make_put_request(char *line, t_request *req, int sockfd)
+{
+	(void)line;
+	(void)req;
+	(void)sockfd;
+	return (ERR_NONE);
+}
+
 // return 0 on success, 1 on minor err, 2 on fatal err
 int make_request(char *line, uint16_t reqcmd, t_request *req, int sockfd)
 {
@@ -69,6 +86,9 @@ int make_request(char *line, uint16_t reqcmd, t_request *req, int sockfd)
 	if ((reqcmd == cmd_get || reqcmd == cmd_put) && !*req->filename) {
 		printf("ERR: get/put need filename argument\n");
 		return (ERR_MINOR);
+	}
+	if (reqcmd == cmd_put) {
+		return (make_put_request(line, req, sockfd));
 	}
 	/* printf("REQ: %d %d\n", req->cmd, reqcmd); */
 	if (write(sockfd, req, sizeof(*req)) < 0) {
