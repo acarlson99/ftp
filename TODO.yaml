@@ -1,11 +1,12 @@
 TODO:
+  - comprehensive error messages
+  - restrict path
   - commands:
-    - ls
     - cd
     - put
     - pwd
-  - restrict path
 
 DONE:
   - commands:
+    - ls
     - put

@@ -34,8 +34,7 @@ fclean: clean
 re: fclean all
 
 .PHONY: format
-debug: CFLAGS += -g -fsanitize=address
-debug: LDFLAGS += -fsanitize=address
+debug: CFLAGS += -g
 debug: re
 
 .PHONY: format

@@ -39,10 +39,10 @@ int handle_response(int sockfd, t_request *req)
 			ret = ERR_FATAL;
 			break;
 		}
-		printf("%d\n", resp.err);
+		/* printf("%d\n", resp.err); */
 		err = ntohs(resp.err);
 		size = ntohs(resp.size);
-		printf("RESP: %d %d\n", err, size);
+		/* printf("RESP: %d %d\n", err, size); */
 		if (err) {
 			printf("ERR: %d\n", err);
 		}
@@ -70,7 +70,7 @@ int make_request(char *line, uint16_t reqcmd, t_request *req, int sockfd)
 		printf("ERR: get/put need filename argument\n");
 		return (ERR_MINOR);
 	}
-	printf("REQ: %d %d\n", req->cmd, reqcmd);
+	/* printf("REQ: %d %d\n", req->cmd, reqcmd); */
 	if (write(sockfd, req, sizeof(*req)) < 0) {
 		perror("Unable to write to socket");
 		return (ERR_FATAL);
