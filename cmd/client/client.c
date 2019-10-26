@@ -95,7 +95,15 @@ void handle_conn(int sockfd)
 			goto end;
 			break;
 		case cmd_help:
-			printf("HELP MESSAGE\n");
+			printf("\
+| command    | example        | summary                      |\n\
+|------------|----------------|------------------------------|\n\
+| `ls`       | `ls`           | list files in dir            |\n\
+| `cd dir`   | `cd ../`       | change dir                   |\n\
+| `pwd`      | `pwd`          | print working dir            |\n\
+| `get file` | `get file.txt` | download file                |\n\
+| `put file` | `put file.txt` | upload file                  |\n\
+| `!command` | `!cd /tmp`     | run command on local machine |\n");
 			break;
 		case cmd_none:
 			printf("Unrecognized command\n");
@@ -140,7 +148,7 @@ void handle_sigpipe(int sig)
 	exit(1);
 }
 
-void usage(char *binname) { printf("usage: %s [4n] port\n", binname); }
+void usage(char *binname) { printf("usage: %s [-4n] port\n", binname); }
 
 // ./client -n e1z3r2p2.42.us.org 8080
 // ./client -4 127.0.0.1 8080
@@ -168,7 +176,7 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'h':
-			printf("usage: %s [4n] port\n", binname);
+			usage(binname);
 			printf("\t4 - ipv4 addr\n\tn - hostname\n");
 			return (0);
 		default:
@@ -179,7 +187,7 @@ int main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 	if (!ipv4set) {
-		printf("Must specify server_ipv4/ipv4\n");
+		printf("Must specify server hostname/ipv4\n");
 		usage(binname);
 		return (1);
 	}

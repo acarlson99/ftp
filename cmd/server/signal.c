@@ -18,7 +18,6 @@ void handle_sigint(int sig)
 {
 	(void)sig;
 	puts("Cleaning up");
-	printf("%d\n", g_sockfd);
 	free(g_home_dir);
 	close(g_sockfd);
 	exit(0);

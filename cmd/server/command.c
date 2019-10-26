@@ -50,12 +50,13 @@ void command_cd(int connfd, t_response *resp, t_request *req)
 		resp->err = htons(err_baddir);
 	}
 
+	printf("%s\n", oldwd);
 	char *wd = getcwd(NULL, 0);
 	if (strncmp(g_home_dir, wd, g_home_len - 1)) {
 		resp->err = htons(err_baddir);
-		if (!chdir(oldwd)) {
+		if (chdir(oldwd)) {
 			perror("Unable to cd to old workingdir");
-			if (!chdir(g_home_dir)) {
+			if (chdir(g_home_dir)) {
 				perror("Unable to cd home");
 				resp->err = htons(err_fatal);
 			}

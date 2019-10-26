@@ -30,3 +30,5 @@ make
 | `get file` | `get file.txt` | download file                |
 | `put file` | `put file.txt` | upload file                  |
 | `!command` | `!cd /tmp`     | run command on local machine |
+
+![screenshot](./resources/screenshot.png)

@@ -9,3 +9,4 @@ cmd/client/client
 *.out
 /.vscode
 /FTP
+._*
