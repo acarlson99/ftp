@@ -8,3 +8,4 @@ cmd/client/client
 .nfs.*
 *.out
 /.vscode
+/FTP

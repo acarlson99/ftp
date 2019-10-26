@@ -1,8 +1,8 @@
 TODO:
-  - clean up client/server output
   - make path restriction better
 
 DONE:
+  - clean up client/server output
   - restrict path
   - comprehensive error messages
   - commands:

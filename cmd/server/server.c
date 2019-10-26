@@ -77,12 +77,13 @@ void handle_conn(int connfd)
 	close(connfd);
 }
 
-void usage(char *binname) { printf("usage: %s port\n", binname); }
+void usage(const char *binname) { printf("usage: %s port\n", binname); }
 
 int main(int argc, char **argv)
 {
 	int ch;
 	const char *basedir = "./FTP";
+	const char *binname = argv[0];
 
 	while ((ch = getopt(argc, argv, "d:")) != -1) {
 		switch (ch) {
@@ -90,13 +91,26 @@ int main(int argc, char **argv)
 			basedir = optarg;
 			break;
 		default:
-			printf("usage: %s port\n", argv[0]);
+			usage(binname);
 			return (1);
 			break;
 		}
 	}
 	argc -= optind;
 	argv += optind;
+
+	// set port
+	if (argc != 1) {
+		usage(binname);
+		return (1);
+	}
+
+	int port = atoi(argv[0]);
+	if (port < 1) {
+		puts("Invalid port");
+		usage(binname);
+		return (1);
+	}
 
 	// make dir
 	if (mkdir(basedir, 0777)) {
@@ -111,16 +125,6 @@ int main(int argc, char **argv)
 	printf("Chdir into %s\n", basedir);
 	g_home_dir = getcwd(NULL, 0);
 	g_home_len = strlen(g_home_dir);
-
-	if (argc != 1) {
-		printf("usage: %s port\n", argv[0]);
-		return (1);
-	}
-
-	int port = atoi(argv[0]);
-	if (port < 1) {
-		puts("Invalid port");
-	}
 
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
