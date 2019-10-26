@@ -50,7 +50,6 @@ void command_cd(int connfd, t_response *resp, t_request *req)
 		resp->err = htons(err_baddir);
 	}
 
-	printf("%s\n", oldwd);
 	char *wd = getcwd(NULL, 0);
 	if (strncmp(g_home_dir, wd, g_home_len - 1)) {
 		resp->err = htons(err_baddir);
@@ -130,7 +129,6 @@ void command_get(int connfd, t_response *resp, t_request *req)
 void command_put(int connfd, t_response *resp, t_request *req)
 {
 	struct s_response cli_resp;
-	uint16_t err = 0;
 	uint16_t size = 0;
 
 	int fd = -1;
@@ -141,7 +139,7 @@ void command_put(int connfd, t_response *resp, t_request *req)
 		++filename;
 	fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
 	if (fd < 0) {
-		printf("Unable to open file [%s]\n", filename);
+		printf("Error opening file [%s]\n", filename);
 		perror("Unable to open file");
 	}
 
@@ -152,7 +150,6 @@ void command_put(int connfd, t_response *resp, t_request *req)
 			perror("Error reading header");
 			break;
 		}
-		err = ntohs(cli_resp.err);
 		size = ntohs(cli_resp.size);
 		if (size <= 0)
 			break;

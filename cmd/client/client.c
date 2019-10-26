@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/signal.h>
 #include <unistd.h>
 
 char *g_cmd_str[8] = {
