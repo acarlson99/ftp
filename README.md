@@ -24,7 +24,7 @@ make
 
 | command    | example        | summary                      |
 |------------|----------------|------------------------------|
-| `ls`       | `ls`           | list files in dir            |
+| `ls`       | `ls`           | list files in current dir    |
 | `cd dir`   | `cd ../`       | change dir                   |
 | `pwd`      | `pwd`          | print working dir            |
 | `get file` | `get file.txt` | download file                |
